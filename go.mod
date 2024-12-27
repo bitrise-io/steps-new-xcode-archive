@@ -34,3 +34,7 @@ require (
 	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )
+
+replace github.com/bitrise-io/go-xcode v1.1.2-0.20241021091717-e6ebe7ad2c74 => github.com/naveen-bitrise/go-xcode v1.1.2
+
+replace github.com/bitrise-io/go-xcode/v2 v2.0.0-alpha.50 => github.com/naveen-bitrise/go-xcode/v2 v2.0.1

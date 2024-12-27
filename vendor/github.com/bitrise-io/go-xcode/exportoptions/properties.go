@@ -177,6 +177,8 @@ const (
 
 const DestinationKey = "destination"
 
+const TestFlightInternalTestingOnlyKey = "testFlightInternalTestingOnly"
+
 type Destination string
 
 // Destination ...

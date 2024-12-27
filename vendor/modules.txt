@@ -40,7 +40,7 @@ github.com/bitrise-io/go-utils/v2/log
 github.com/bitrise-io/go-utils/v2/log/colorstring
 github.com/bitrise-io/go-utils/v2/pathutil
 github.com/bitrise-io/go-utils/v2/retryhttp
-# github.com/bitrise-io/go-xcode v1.1.2-0.20241021091717-e6ebe7ad2c74
+# github.com/bitrise-io/go-xcode v1.1.2-0.20241021091717-e6ebe7ad2c74 => github.com/naveen-bitrise/go-xcode v1.1.2
 ## explicit; go 1.20
 github.com/bitrise-io/go-xcode/certificateutil
 github.com/bitrise-io/go-xcode/export
@@ -58,7 +58,7 @@ github.com/bitrise-io/go-xcode/xcodeproject/xcodeproj
 github.com/bitrise-io/go-xcode/xcodeproject/xcscheme
 github.com/bitrise-io/go-xcode/xcodeproject/xcworkspace
 github.com/bitrise-io/go-xcode/xcpretty
-# github.com/bitrise-io/go-xcode/v2 v2.0.0-alpha.50
+# github.com/bitrise-io/go-xcode/v2 v2.0.0-alpha.50 => github.com/naveen-bitrise/go-xcode/v2 v2.0.1
 ## explicit; go 1.20
 github.com/bitrise-io/go-xcode/v2/autocodesign
 github.com/bitrise-io/go-xcode/v2/autocodesign/certdownloader

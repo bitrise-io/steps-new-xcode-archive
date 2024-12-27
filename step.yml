@@ -97,8 +97,17 @@ inputs:
     value_options:
     - development
     - app-store
-    - ad-hoc
+    - ad-hoccl
     - enterprise
+    is_required: true
+
+- testflight_internal_testing_only: "no"
+  opts:
+    title: Testflight Internal Testing Only
+    summary: Set this flag if the archive is for internal testflight distribution. Distribution Method has to be set to app-store
+    value_options:
+    - "yes"
+    - "no"
     is_required: true
 
 # xcodebuild configuration

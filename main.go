@@ -92,6 +92,7 @@ func createRunOptions(config step.Config) step.RunOpts {
 
 		CustomExportOptionsPlistContent: config.ExportOptionsPlistContent,
 		ExportMethod:                    config.ExportMethod,
+		TestFlightInternalTestingOnly:   config.TestFlightInternalTestingOnly,
 		ICloudContainerEnvironment:      config.ICloudContainerEnvironment,
 		ExportDevelopmentTeam:           config.ExportDevelopmentTeam,
 		UploadBitcode:                   config.UploadBitcode,

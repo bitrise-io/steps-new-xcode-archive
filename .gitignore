@@ -4,4 +4,5 @@ _tmp
 .idea/
 .vscode
 .DS_Store
+cli/
 steps-xcode-archive

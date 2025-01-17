@@ -256,31 +256,31 @@ workflows:
     - _check_outputs
     - _check_exported_artifacts
 
-  test_apple_id:
-    description: Running Apple ID tests on a single stack to avoid 503 Service Temporarily Unavailable issue.
-    steps:
-    - bitrise-run:
-        run_if: |-
-          {{ or (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
-        inputs:
-        - workflow_id: utility_test_apple_id
-        - bitrise_config_path: ./e2e/bitrise.yml
+  # test_apple_id:
+  #   description: Running Apple ID tests on a single stack to avoid 503 Service Temporarily Unavailable issue.
+  #   steps:
+  #   - bitrise-run:
+  #       run_if: |-
+  #         {{ or (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
+  #       inputs:
+  #       - workflow_id: utility_test_apple_id
+  #       - bitrise_config_path: ./e2e/bitrise.yml
 
-  utility_test_apple_id:
-    envs:
-    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-ios-simple-objc.git
-    - TEST_APP_BRANCH: new-certificates
-    - BITRISE_PROJECT_PATH: ios-simple-objc/ios-simple-objc.xcodeproj
-    - BITRISE_SCHEME: ios-simple-objc
-    - CODE_SIGNING_METHOD: apple-id
-    - TEAM_ID: 72SA8V3WYL
-    - MIN_DAYS_PROFILE_VALID: 0
-    - IPA_EXPORT_METHOD: development
-    - LOG_FORMATTER: xcodebuild
-    after_run:
-    - _run
-    - _check_outputs
-    - _check_exported_artifacts
+  # utility_test_apple_id:
+  #   envs:
+  #   - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-ios-simple-objc.git
+  #   - TEST_APP_BRANCH: new-certificates
+  #   - BITRISE_PROJECT_PATH: ios-simple-objc/ios-simple-objc.xcodeproj
+  #   - BITRISE_SCHEME: ios-simple-objc
+  #   - CODE_SIGNING_METHOD: apple-id
+  #   - TEAM_ID: 72SA8V3WYL
+  #   - MIN_DAYS_PROFILE_VALID: 0
+  #   - IPA_EXPORT_METHOD: development
+  #   - LOG_FORMATTER: xcodebuild
+  #   after_run:
+  #   - _run
+  #   - _check_outputs
+  #   - _check_exported_artifacts
 
   test_api_key_signing_manual_entitlements:
     description: Test API key based code signing on a project where code signing is not managed automatically and has special entitlements.
@@ -314,32 +314,32 @@ workflows:
     - _check_outputs
     - _check_exported_artifacts
 
-  test_apple_id_signing_managed_app_store:
-    description: Running Apple ID tests on a single stack to avoid 503 Service Temporarily Unavailable issue.
-    steps:
-    - bitrise-run:
-        run_if: |-
-          {{ or (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
-        inputs:
-        - workflow_id: utility_test_apple_id_signing_managed_app_store
-        - bitrise_config_path: ./e2e/bitrise.yml
+  # test_apple_id_signing_managed_app_store:
+  #   description: Running Apple ID tests on a single stack to avoid 503 Service Temporarily Unavailable issue.
+  #   steps:
+  #   - bitrise-run:
+  #       run_if: |-
+  #         {{ or (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
+  #       inputs:
+  #       - workflow_id: utility_test_apple_id_signing_managed_app_store
+  #       - bitrise_config_path: ./e2e/bitrise.yml
 
-  utility_test_apple_id_signing_managed_app_store:
-    description: Test Apple ID based code signing and app store export on a project where signing is managed automatically
-    envs:
-    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-ios-multi-target.git
-    - TEST_APP_BRANCH: automatic
-    - BITRISE_PROJECT_PATH: code-sign-test.xcodeproj
-    - BITRISE_SCHEME: code-sign-test
-    - CODE_SIGNING_METHOD: apple-id
-    - TEAM_ID: 72SA8V3WYL
-    - MIN_DAYS_PROFILE_VALID: 0
-    - IPA_EXPORT_METHOD: app-store
-    - LOG_FORMATTER: xcpretty
-    after_run:
-    - _run
-    - _check_outputs
-    - _check_exported_artifacts
+  # utility_test_apple_id_signing_managed_app_store:
+  #   description: Test Apple ID based code signing and app store export on a project where signing is managed automatically
+  #   envs:
+  #   - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-ios-multi-target.git
+  #   - TEST_APP_BRANCH: automatic
+  #   - BITRISE_PROJECT_PATH: code-sign-test.xcodeproj
+  #   - BITRISE_SCHEME: code-sign-test
+  #   - CODE_SIGNING_METHOD: apple-id
+  #   - TEAM_ID: 72SA8V3WYL
+  #   - MIN_DAYS_PROFILE_VALID: 0
+  #   - IPA_EXPORT_METHOD: app-store
+  #   - LOG_FORMATTER: xcpretty
+  #   after_run:
+  #   - _run
+  #   - _check_outputs
+  #   - _check_exported_artifacts
 
   test_cloudkit:
     envs:

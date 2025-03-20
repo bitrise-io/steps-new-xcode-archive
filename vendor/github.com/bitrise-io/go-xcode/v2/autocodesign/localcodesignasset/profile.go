@@ -12,7 +12,7 @@ type Profile struct {
 	attributes     appstoreconnect.ProfileAttributes
 	id             string
 	bundleID       string
-	deviceIDs      []string
+	deviceUDIDs    []string
 	certificateIDs []string
 }
 
@@ -29,7 +29,7 @@ func NewProfile(info profileutil.ProvisioningProfileInfoModel, content []byte) a
 		id:             "", // only in case of Developer Portal Profiles
 		bundleID:       info.BundleID,
 		certificateIDs: nil, // only in case of Developer Portal Profiles
-		deviceIDs:      nil, // only in case of Developer Portal Profiles
+		deviceUDIDs:    nil, // (recheck this) only in case of Developer Portal Profiles
 	}
 }
 
@@ -48,9 +48,9 @@ func (p Profile) CertificateIDs() ([]string, error) {
 	return p.certificateIDs, nil
 }
 
-// DeviceIDs ...
-func (p Profile) DeviceIDs() ([]string, error) {
-	return p.deviceIDs, nil
+// DeviceUDIDs ...
+func (p Profile) DeviceUDIDs() ([]string, error) {
+	return p.deviceUDIDs, nil
 }
 
 // BundleID ...

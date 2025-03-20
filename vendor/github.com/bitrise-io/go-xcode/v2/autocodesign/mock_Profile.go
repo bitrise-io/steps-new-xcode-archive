@@ -76,8 +76,8 @@ func (_m *MockProfile) CertificateIDs() ([]string, error) {
 	return r0, r1
 }
 
-// DeviceIDs provides a mock function with given fields:
-func (_m *MockProfile) DeviceIDs() ([]string, error) {
+// DeviceUDIDs provides a mock function with given fields:
+func (_m *MockProfile) DeviceUDIDs() ([]string, error) {
 	ret := _m.Called()
 
 	var r0 []string

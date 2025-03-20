@@ -22,7 +22,7 @@ type Profile interface {
 	ID() string
 	Attributes() appstoreconnect.ProfileAttributes
 	CertificateIDs() ([]string, error)
-	DeviceIDs() ([]string, error)
+	DeviceUDIDs() ([]string, error)
 	BundleID() (appstoreconnect.BundleID, error)
 	Entitlements() (Entitlements, error)
 }
@@ -66,6 +66,12 @@ type Certificate struct {
 	CertificateInfo certificateutil.CertificateInfoModel
 	ID              string
 }
+
+// DeviceIDs is the opaque ID of a device (from used in the Developer Portal API)
+type DeviceIDs []string
+
+// DeviceUDIDs are used in the provisioning profiles, as unique device identifiers
+type DeviceUDIDs []string
 
 // DevPortalClient abstract away the Apple Developer Portal API
 type DevPortalClient interface {
@@ -170,8 +176,8 @@ func (m codesignAssetManager) EnsureCodesignAssets(appLayout AppLayout, opts Cod
 		return nil, err
 	}
 
-	var devPortalDeviceIDs []string
-	var devPortalDeviceUDIDs []string
+	var devPortalDeviceIDs DeviceIDs
+	var devPortalDeviceUDIDs DeviceUDIDs
 	if DistributionTypeRequiresDeviceList(distrTypes) {
 		devPortalDevices, err := EnsureTestDevices(m.devPortalClient, opts.BitriseTestDevices, appLayout.Platform)
 		if err != nil {
@@ -208,7 +214,7 @@ func (m codesignAssetManager) EnsureCodesignAssets(appLayout AppLayout, opts Cod
 			printMissingCodeSignAssets(missingAppLayout)
 
 			// Ensure Profiles
-			newCodesignAssets, err := ensureProfiles(m.devPortalClient, distrType, certsByType, *missingAppLayout, devPortalDeviceIDs, opts.MinProfileValidityDays)
+			newCodesignAssets, err := ensureProfiles(m.devPortalClient, distrType, certsByType, *missingAppLayout, devPortalDeviceIDs, devPortalDeviceUDIDs, opts.MinProfileValidityDays)
 			if err != nil {
 				switch {
 				case errors.As(err, &ErrAppClipAppID{}):

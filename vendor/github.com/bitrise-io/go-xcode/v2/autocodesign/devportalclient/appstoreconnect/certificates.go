@@ -8,11 +8,27 @@ import (
 // CertificatesEndpoint ...
 const CertificatesEndpoint = "certificates"
 
+// ListCertificatesSortOption ...
+type ListCertificatesSortOption string
+
+// ListCertificatesSortOptions ...
+const (
+	ListCertificatesSortOptionDisplayName         ListCertificatesSortOption = "displayName"
+	ListCertificatesSortOptionDisplayNameDesc     ListCertificatesSortOption = "-displayName"
+	ListCertificatesSortOptionCertificateType     ListCertificatesSortOption = "certificateType"
+	ListCertificatesSortOptionCertificateTypeDesc ListCertificatesSortOption = "-certificateType"
+	ListCertificatesSortOptionSerialNumber        ListCertificatesSortOption = "serialNumber"
+	ListCertificatesSortOptionSerialNumberDesc    ListCertificatesSortOption = "-serialNumber"
+	ListCertificatesSortOptionID                  ListCertificatesSortOption = "id"
+	ListCertificatesSortOptionIDDesc              ListCertificatesSortOption = "-id"
+)
+
 // ListCertificatesOptions ...
 type ListCertificatesOptions struct {
 	PagingOptions
-	FilterSerialNumber    string          `url:"filter[serialNumber],omitempty"`
-	FilterCertificateType CertificateType `url:"filter[certificateType],omitempty"`
+	FilterSerialNumber    string                     `url:"filter[serialNumber],omitempty"`
+	FilterCertificateType CertificateType            `url:"filter[certificateType],omitempty"`
+	Sort                  ListCertificatesSortOption `url:"sort,omitempty"`
 }
 
 // CertificateType ...
@@ -53,6 +69,7 @@ type Certificate struct {
 type CertificatesResponse struct {
 	Data  []Certificate      `json:"data"`
 	Links PagedDocumentLinks `json:"links,omitempty"`
+	Meta  PagingInformation  `json:"meta,omitempty"`
 }
 
 // ListCertificates ...

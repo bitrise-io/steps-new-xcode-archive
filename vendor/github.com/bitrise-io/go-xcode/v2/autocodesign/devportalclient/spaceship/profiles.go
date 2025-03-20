@@ -46,9 +46,9 @@ func (p Profile) CertificateIDs() ([]string, error) {
 	return p.certificateIDs, nil
 }
 
-// DeviceIDs ...
-func (p Profile) DeviceIDs() ([]string, error) {
-	return p.deviceIDs, nil
+// DeviceUDIDs ...
+func (p Profile) DeviceUDIDs() ([]string, error) {
+	return autocodesign.ParseRawProfileDeviceUDIDs(p.attributes.ProfileContent)
 }
 
 // BundleID ...

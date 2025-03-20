@@ -48,6 +48,13 @@ func (p APIProfile) CertificateIDs() ([]string, error) {
 			},
 		)
 		if err != nil {
+			var apiError *appstoreconnect.ErrorResponse
+			if ok := errors.As(err, &apiError); ok {
+				if apiError.IsCursorInvalid() {
+					log.Warnf("Cursor is invalid, falling back to listing certificates with 200 limit")
+					return p.list200CertificateIDs()
+				}
+			}
 			return nil, wrapInProfileError(err)
 		}
 
@@ -59,7 +66,7 @@ func (p APIProfile) CertificateIDs() ([]string, error) {
 		}
 	}
 
-	ids := []string{}
+	var ids []string
 	for _, cert := range certificates {
 		ids = append(ids, cert.ID)
 	}
@@ -67,33 +74,33 @@ func (p APIProfile) CertificateIDs() ([]string, error) {
 	return ids, nil
 }
 
-// DeviceIDs ...
-func (p APIProfile) DeviceIDs() ([]string, error) {
-	var nextPageURL string
+// CertificateIDs ...
+func (p APIProfile) list200CertificateIDs() ([]string, error) {
+	response, err := p.client.Provisioning.Certificates(
+		p.profile.Relationships.Certificates.Links.Related,
+		&appstoreconnect.PagingOptions{
+			Limit: 200,
+		},
+	)
+	if err != nil {
+		return nil, wrapInProfileError(err)
+	}
+
+	if response.Meta.Paging.Total > 200 {
+		log.Warnf("More than 200 certificates (%d) found", response.Meta.Paging.Total)
+	}
+
 	var ids []string
-	for {
-		response, err := p.client.Provisioning.Devices(
-			p.profile.Relationships.Devices.Links.Related,
-			&appstoreconnect.PagingOptions{
-				Limit: 20,
-				Next:  nextPageURL,
-			},
-		)
-		if err != nil {
-			return nil, wrapInProfileError(err)
-		}
-
-		for _, device := range response.Data {
-			ids = append(ids, device.ID)
-		}
-
-		nextPageURL = response.Links.Next
-		if nextPageURL == "" {
-			break
-		}
+	for _, cert := range response.Data {
+		ids = append(ids, cert.ID)
 	}
 
 	return ids, nil
+}
+
+// DeviceUDIDs ...
+func (p APIProfile) DeviceUDIDs() ([]string, error) {
+	return autocodesign.ParseRawProfileDeviceUDIDs(p.profile.Attributes.ProfileContent)
 }
 
 // BundleID ...
@@ -195,13 +202,32 @@ func (c *ProfileClient) deleteExpiredProfile(bundleID *appstoreconnect.BundleID,
 			Next:  nextPageURL,
 		})
 		if err != nil {
+			var apiError *appstoreconnect.ErrorResponse
+			if ok := errors.As(err, &apiError); ok {
+				if apiError.IsCursorInvalid() {
+					log.Warnf("Cursor is invalid, falling back to listing profiles with 200 limit")
+					fallbackProfiles, err := c.list200Profiles(bundleID)
+					if err != nil {
+						return err
+					}
+
+					for _, fallbackProfile := range fallbackProfiles {
+						if fallbackProfile.Attributes.Name == profileName {
+							profile = &fallbackProfile
+
+							return c.DeleteProfile(profile.ID)
+						}
+					}
+
+					return fmt.Errorf("failed to find profile: %s", profileName)
+				}
+			}
 			return err
 		}
 
-		for _, d := range response.Data {
-			if d.Attributes.Name == profileName {
-				profile = &d
-				break
+		for _, profile := range response.Data {
+			if profile.Attributes.Name == profileName {
+				return c.DeleteProfile(profile.ID)
 			}
 		}
 
@@ -211,11 +237,21 @@ func (c *ProfileClient) deleteExpiredProfile(bundleID *appstoreconnect.BundleID,
 		}
 	}
 
-	if profile == nil {
-		return fmt.Errorf("failed to find profile: %s", profileName)
+	return fmt.Errorf("failed to find profile: %s", profileName)
+}
+
+func (c *ProfileClient) list200Profiles(bundleID *appstoreconnect.BundleID) ([]appstoreconnect.Profile, error) {
+	response, err := c.client.Provisioning.Profiles(bundleID.Relationships.Profiles.Links.Related, &appstoreconnect.PagingOptions{
+		Limit: 200,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if response.Meta.Paging.Total > 200 {
+		log.Warnf("More than 200 profiles (%d) found", response.Meta.Paging.Total)
 	}
 
-	return c.DeleteProfile(profile.ID)
+	return response.Data, nil
 }
 
 func (c *ProfileClient) createProfile(name string, profileType appstoreconnect.ProfileType, bundleID appstoreconnect.BundleID, certificateIDs []string, deviceIDs []string) (autocodesign.Profile, error) {
@@ -249,6 +285,18 @@ func (c *ProfileClient) FindBundleID(bundleIDIdentifier string) (*appstoreconnec
 			FilterIdentifier: bundleIDIdentifier,
 		})
 		if err != nil {
+			var apiError *appstoreconnect.ErrorResponse
+			if ok := errors.As(err, &apiError); ok {
+				if apiError.IsCursorInvalid() {
+					log.Warnf("Cursor is invalid, falling back to listing bundleIDs with 400 limit")
+					fallbackBundleIDs, err := c.list400BundleIDs(bundleIDIdentifier)
+					if err != nil {
+						return nil, err
+					}
+					bundleIDs = fallbackBundleIDs
+					break
+				}
+			}
 			return nil, err
 		}
 
@@ -256,6 +304,10 @@ func (c *ProfileClient) FindBundleID(bundleIDIdentifier string) (*appstoreconnec
 
 		nextPageURL = response.Links.Next
 		if nextPageURL == "" {
+			break
+		}
+		if len(bundleIDs) >= response.Meta.Paging.Total {
+			log.Warnf("All bundleIDs fetched, but next page URL is not empty")
 			break
 		}
 	}
@@ -272,6 +324,42 @@ func (c *ProfileClient) FindBundleID(bundleIDIdentifier string) (*appstoreconnec
 		}
 	}
 	return nil, nil
+}
+
+func (c *ProfileClient) list400BundleIDs(bundleIDIdentifier string) ([]appstoreconnect.BundleID, error) {
+	bundleIDByID := map[string]appstoreconnect.BundleID{}
+	var totalCount int
+	for _, sort := range []appstoreconnect.ListBundleIDsSortOption{appstoreconnect.ListBundleIDsSortOptionID, appstoreconnect.ListBundleIDsSortOptionIDDesc} {
+		response, err := c.client.Provisioning.ListBundleIDs(&appstoreconnect.ListBundleIDsOptions{
+			PagingOptions: appstoreconnect.PagingOptions{
+				Limit: 200,
+			},
+			FilterIdentifier: bundleIDIdentifier,
+			Sort:             sort,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, responseBundleID := range response.Data {
+			bundleIDByID[responseBundleID.ID] = responseBundleID
+		}
+
+		if totalCount == 0 {
+			totalCount = response.Meta.Paging.Total
+		}
+	}
+
+	if totalCount > 0 && totalCount > 400 {
+		log.Warnf("More than 400 bundleIDs (%d) found", totalCount)
+	}
+
+	var bundleIDs []appstoreconnect.BundleID
+	for _, bundleID := range bundleIDByID {
+		bundleIDs = append(bundleIDs, bundleID)
+	}
+
+	return bundleIDs, nil
 }
 
 // CreateBundleID ...

@@ -127,6 +127,7 @@ type ProfilesResponse struct {
 		Attributes serialized.Object `json:"attributes"`
 	} `json:"included"`
 	Links PagedDocumentLinks `json:"links,omitempty"`
+	Meta  PagingInformation  `json:"meta,omitempty"`
 }
 
 // ListProfiles ...

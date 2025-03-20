@@ -2,9 +2,11 @@ package appstoreconnectclient
 
 import (
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"math/big"
 
+	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-xcode/certificateutil"
 	"github.com/bitrise-io/go-xcode/v2/autocodesign"
 	"github.com/bitrise-io/go-xcode/v2/autocodesign/devportalclient/appstoreconnect"
@@ -85,13 +87,61 @@ func queryCertificatesByType(client *appstoreconnect.Client, certificateType app
 			FilterCertificateType: certificateType,
 		})
 		if err != nil {
+			var apiError *appstoreconnect.ErrorResponse
+			if ok := errors.As(err, &apiError); ok {
+				if apiError.IsCursorInvalid() {
+					log.Warnf("Cursor is invalid, falling back to listing certificates with 400 limit")
+					return list400Certificates(client, certificateType)
+				}
+			}
 			return nil, err
 		}
+
 		certificates = append(certificates, response.Data...)
 
 		nextPageURL = response.Links.Next
 		if nextPageURL == "" {
 			return parseCertificatesResponse(certificates)
 		}
+		if len(certificates) >= response.Meta.Paging.Total {
+			log.Warnf("All certificates fetched, but next page URL is not empty")
+			return parseCertificatesResponse(certificates)
+		}
 	}
+}
+
+func list400Certificates(client *appstoreconnect.Client, certificateType appstoreconnect.CertificateType) ([]autocodesign.Certificate, error) {
+	certificatesByID := map[string]appstoreconnect.Certificate{}
+	var totalCount int
+	for _, sort := range []appstoreconnect.ListCertificatesSortOption{appstoreconnect.ListCertificatesSortOptionID, appstoreconnect.ListCertificatesSortOptionIDDesc} {
+		response, err := client.Provisioning.ListCertificates(&appstoreconnect.ListCertificatesOptions{
+			PagingOptions: appstoreconnect.PagingOptions{
+				Limit: 200,
+			},
+			FilterCertificateType: certificateType,
+			Sort:                  sort,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, responseCertificate := range response.Data {
+			certificatesByID[responseCertificate.ID] = responseCertificate
+		}
+
+		if totalCount == 0 {
+			totalCount = response.Meta.Paging.Total
+		}
+	}
+
+	if totalCount > 0 && totalCount > 400 {
+		log.Warnf("More than 400 certificates (%d) found", totalCount)
+	}
+
+	var certificates []appstoreconnect.Certificate
+	for _, certificate := range certificatesByID {
+		certificates = append(certificates, certificate)
+	}
+
+	return parseCertificatesResponse(certificates)
 }

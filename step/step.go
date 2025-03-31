@@ -816,7 +816,12 @@ func (s XcodebuildArchiver) xcodeArchive(opts xcodeArchiveOpts) (xcodeArchiveRes
 
 	s.logger.TInfof("Reading xcode project")
 
-	platform, err := BuildableTargetPlatform(xcodeProj, scheme, configuration, opts.AdditionalOptions, XcodeBuild{}, s.logger)
+	// When Package.resolved is embedded in the workspace, passing additional options can cause failure ("-onlyUsePackageVersionsFromResolvedFile" "-skipMacroValidation" "-skipPackagePluginValidation")
+	//  a resolved file is required when automatic dependency resolution is disabled and should be placed at /git/sample.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved.
+	// An alternative to passing "-onlyUsePackageVersionsFromResolvedFile" or "-disableAutomaticPackageResolution" is to set the following defaults in a Script Step:
+	// defaults write com.apple.dt.Xcode IDEPackageOnlyUseVersionsFromResolvedFile
+	// defaults write com.apple.dt.Xcode IDEDisableAutomaticPackageResolution
+	platform, err := BuildableTargetPlatform(xcodeProj, scheme, configuration, []string{}, XcodeBuild{}, s.logger)
 	if err != nil {
 		return out, fmt.Errorf("failed to read project platform: %s: %s", opts.ProjectPath, err)
 	}
